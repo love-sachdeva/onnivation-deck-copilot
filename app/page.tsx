@@ -9,6 +9,8 @@ type AppStatus = "checking" | "preview" | "scanning" | "ready" | "planning" | "a
 type PlannerStatus = {
   claudeConfigured: boolean;
   openAIConfigured: boolean;
+  canvaAuthConfigured: boolean;
+  aiReady: boolean;
   planner: "claude" | "openai" | "local";
   model: string;
 };
@@ -69,6 +71,8 @@ export default function Home() {
   const [plannerStatus, setPlannerStatus] = useState<PlannerStatus>({
     claudeConfigured: false,
     openAIConfigured: false,
+    canvaAuthConfigured: false,
+    aiReady: false,
     planner: "local",
     model: "deterministic-local",
   });
@@ -146,6 +150,7 @@ export default function Home() {
       if (!response.ok) throw new Error("The change plan could not be prepared.");
       const nextPlan = (await response.json()) as DeckPlan;
       setPlan(nextPlan);
+      if (nextPlan.plannerWarning) setNotice(nextPlan.plannerWarning);
       setActiveTab("plan");
       setStatus(connected ? "ready" : "preview");
       if (autoApply && connected) {
@@ -231,9 +236,9 @@ export default function Home() {
         <header className="topbar">
           <div><p className="eyebrow">Onnivation</p><h1>Deck Copilot</h1></div>
           <div className="service-status">
-            <span className={`service-pill ${plannerStatus.claudeConfigured ? "is-connected" : ""}`} title={plannerStatus.claudeConfigured ? plannerStatus.model : "Add ANTHROPIC_API_KEY server-side to connect Claude"}>
-              <StatusDot tone={plannerStatus.claudeConfigured ? "green" : "muted"} />
-              Claude {plannerStatus.claudeConfigured ? "connected" : "not configured"}
+            <span className={`service-pill ${connected && plannerStatus.aiReady ? "is-connected" : ""}`} title={plannerStatus.claudeConfigured ? `${plannerStatus.model} is secured behind Canva user verification` : "Add ANTHROPIC_API_KEY server-side to connect Claude"}>
+              <StatusDot tone={connected && plannerStatus.aiReady ? "green" : plannerStatus.claudeConfigured ? "gold" : "muted"} />
+              Claude {connected && plannerStatus.aiReady ? "connected" : plannerStatus.claudeConfigured ? "ready in Canva" : "not configured"}
             </span>
             <button className={`connection-pill ${connected ? "is-connected" : ""}`} onClick={() => void scan()} title="Scan active Canva deck">
               <StatusDot tone={status === "error" ? "muted" : connected ? "green" : "gold"} />

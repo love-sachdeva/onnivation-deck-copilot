@@ -1,6 +1,8 @@
 # Onnivation Deck Copilot
 
-A Canva side-panel application for tailoring and quality-checking editable executive presentations from one natural-language instruction box.
+A two-part presentation copilot: a hosted Next.js planning/backend service on Vercel and a bundled Canva side-panel app for reading and editing live designs.
+
+The two runtimes are intentionally separate. Canva's Apps SDK must be shipped as one `app.js` bundle; a normal Next.js page cannot be used as the in-editor app source.
 
 ## What is implemented
 
@@ -30,7 +32,7 @@ Use the public `*.vercel.app` production URL shown in the Vercel project dashboa
 4. Submit the team app for administrator approval, then add it to the team's Canva apps.
 5. Open an editable deck in Canva and launch **Onnivation Deck Copilot** from the Apps panel.
 
-The standalone endpoint is an intentional preview/planning mode. It now previews planned changes visually, but never claims to have modified Canva. Live scan and apply actions become available only while Canva hosts the app inside its editor.
+The standalone endpoint is an intentional preview/planning mode. It previews deterministic plans visually, but never claims to have modified Canva. Paid AI planning and live scan/apply actions are unlocked only by a verified Canva user token from the bundled side-panel app.
 
 The hosted UI is public so Canva can load it, while paid AI planning is protected by Canva user-token verification. Model keys remain server-side and are never included in the browser bundle.
 
@@ -79,4 +81,10 @@ The current canonical layout registry covers the 33-slide Nike reference deck: c
 ```bash
 npm run build
 npm run dev
+npm run canva:install
+npm run canva:build
 ```
+
+`npm run canva:build` creates `canva-app/dist/app.js`. Upload that file to **Canva Developer Portal → App source → JavaScript file**. The Canva app calls the Vercel backend at `https://onnivation-deck-copilot.vercel.app`, presents the page-level plan, applies executable operations, and re-scans the deck.
+
+The build first syncs the shared Canva engine and deck types from `lib/` into the bundle source so the hosted UI and in-editor app cannot silently drift apart.

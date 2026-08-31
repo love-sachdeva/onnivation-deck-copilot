@@ -10,7 +10,11 @@
     "build": "next build",
     "start": "next start",
     "test": "npm run lint && npm run build",
-    "lint": "eslint . --ignore-pattern .next"
+    "lint": "eslint . --ignore-pattern .next --ignore-pattern canva-app/dist --ignore-pattern canva-app/node_modules",
+    "canva:install": "npm --prefix canva-app ci",
+    "canva:sync": "cp lib/canva-engine.ts canva-app/src/lib/canva-engine.ts && cp lib/deck-types.ts canva-app/src/lib/deck-types.ts",
+    "canva:build": "npm run canva:sync && npm --prefix canva-app run build",
+    "canva:verify": "npm run canva:sync && npm --prefix canva-app run typecheck && npm --prefix canva-app run build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

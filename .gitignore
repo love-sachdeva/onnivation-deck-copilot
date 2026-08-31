@@ -6,6 +6,8 @@ node_modules/
 out/
 dist/
 .vercel/
+canva-app/dist/
+canva-app/node_modules/
 *.log
 *.tsbuildinfo
 .DS_Store

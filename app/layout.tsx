@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://onnivation-deck-copilot.vercel.app"),
   title: "Onnivation Deck Copilot",
   description: "A precision Canva copilot for tailoring and quality-checking executive presentations.",
   openGraph: {

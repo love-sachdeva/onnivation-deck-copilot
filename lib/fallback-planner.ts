@@ -39,6 +39,8 @@ function extractClient(instruction: string) {
 function extractReplacement(instruction: string) {
   const quoted = instruction.match(/replace\s+["“]([^"”]+)["”]\s+with\s+["“]([^"”]+)["”]/i);
   if (quoted) return { find: quoted[1], replace: quoted[2] };
+  const unquoted = instruction.match(/replace\s+(.{1,60}?)\s+with\s+(.{1,80}?)(?:\.|,|;|\band\b|$)/i);
+  if (unquoted) return { find: unquoted[1].trim(), replace: unquoted[2].trim() };
   const plain = instruction.match(/change\s+(.{1,60}?)\s+to\s+(.{1,80}?)(?:\.|$)/i);
   if (plain) return { find: plain[1].trim(), replace: plain[2].trim() };
   return undefined;
