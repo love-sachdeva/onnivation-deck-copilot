@@ -19,10 +19,10 @@ const seedInstruction =
   "Tailor this deck for Nike. Keep every header, footer, margin and background consistent. Update the focus sessions for retail and consumer AI.";
 
 const starterChanges: PlanOperation[] = [
-  { id: "starter-rails", type: "normalize_headers", pages: [], title: "Normalize headers and footers", detail: "Use the canonical grid, route lockup and Onnivation footer.", risk: "safe", enabled: true },
-  { id: "starter-priorities", type: "update_priorities", pages: [2], title: "Remap priorities and icons", detail: "Keep one- and two-line headings aligned to the same baseline.", risk: "review", enabled: true },
-  { id: "starter-people", type: "update_people", pages: [5, 6, 7, 8], title: "Tailor master profiles", detail: "Refresh credentials and company-specific value statements.", risk: "review", enabled: true },
-  { id: "starter-focus", type: "update_focus_sessions", pages: [11, 12, 13, 14], title: "Rebuild focus-session grid", detail: "Match the correct 1, 2, 3 or 4-company layout and normalize fills.", risk: "review", enabled: true },
+  { id: "starter-rails", type: "normalize_headers", pages: Array.from({ length: 31 }, (_, i) => i + 2).filter((page) => ![7, 8, 10].includes(page)), title: "Verify exact headers and footers", detail: "Use the semantic 34-slide contract and exclude the three locked reference slides.", risk: "safe", enabled: true, status: "executable" },
+  { id: "starter-pixel", type: "move_element", pages: [2], title: "Apply exact pixel adjustments", detail: "Resolve one semantic element, preflight one match, then move it by the approved delta.", risk: "review", enabled: true, status: "executable", target: { role: "priority_1_card" }, geometry: { deltaX: 12 }, expectedAffectedElements: { min: 1, max: 1 } },
+  { id: "starter-page", type: "add_page_from_layout", pages: [], title: "Create from an approved layout", detail: "Duplicate the native three-company Focus Session layout without flattening it.", risk: "review", enabled: true, status: "executable", sourcePageKey: "focus-dev-productivity-3" },
+  { id: "starter-asset", type: "replace_image", pages: [12], title: "Replace one verified logo", detail: "Preserve the selected frame and require a reviewed HTTPS asset before apply.", risk: "review", enabled: false, status: "needs_input", target: { role: "focus_1_logo" }, blockedReason: "A verified logo asset is required." },
 ];
 
 function StatusDot({ tone }: { tone: "green" | "gold" | "muted" }) {
@@ -60,7 +60,6 @@ export default function Home() {
   const [instruction, setInstruction] = useState(seedInstruction);
   const [submittedInstruction, setSubmittedInstruction] = useState(seedInstruction);
   const [connected, setConnected] = useState(false);
-  const [autoApply, setAutoApply] = useState(false);
   const [activeTab, setActiveTab] = useState<"plan" | "qa">("plan");
   const [status, setStatus] = useState<AppStatus>("checking");
   const [audit, setAudit] = useState<DeckAudit | null>(null);
@@ -68,6 +67,7 @@ export default function Home() {
   const [result, setResult] = useState<ApplyResult | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [previewApplied, setPreviewApplied] = useState(false);
+  const [approved, setApproved] = useState(false);
   const [plannerStatus, setPlannerStatus] = useState<PlannerStatus>({
     claudeConfigured: false,
     openAIConfigured: false,
@@ -77,18 +77,18 @@ export default function Home() {
     model: "deterministic-local",
   });
 
-  const pageCount = audit?.pageCount || 33;
+  const pageCount = audit?.pageCount || 34;
   const operations = plan?.operations || starterChanges;
-  const enabledOperations = operations.filter((item) => item.enabled);
+  const enabledOperations = operations.filter((item) => item.enabled && item.status !== "needs_input" && item.status !== "blocked");
   const changedSlides = useMemo(
     () => new Set(enabledOperations.flatMap((item) => item.pages)).size || pageCount,
     [enabledOperations, pageCount],
   );
-  const previewClient = useMemo(() => {
+  const previewClient = (() => {
     if (audit?.inferredClient) return audit.inferredClient;
     const match = submittedInstruction.match(/\bfor\s+([A-Z][\w&.-]*(?:\s+[A-Z][\w&.-]*){0,2})/);
     return match?.[1]?.replace(/[.,;:]$/, "") || "Nike";
-  }, [audit?.inferredClient, submittedInstruction]);
+  })();
 
   async function scan() {
     setStatus("scanning");
@@ -132,6 +132,7 @@ export default function Home() {
     setNotice(null);
     setResult(null);
     setPreviewApplied(false);
+    setApproved(false);
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       if (connected) {
@@ -153,10 +154,6 @@ export default function Home() {
       if (nextPlan.plannerWarning) setNotice(nextPlan.plannerWarning);
       setActiveTab("plan");
       setStatus(connected ? "ready" : "preview");
-      if (autoApply && connected) {
-        const safeOperations = nextPlan.operations.map((item) => ({ ...item, enabled: item.enabled && item.risk === "safe" }));
-        await apply(safeOperations);
-      }
     } catch (error) {
       setStatus("error");
       setNotice(error instanceof Error ? error.message : "The plan could not be prepared.");
@@ -172,12 +169,21 @@ export default function Home() {
       setNotice("Simulation updated. No Canva file was changed; launch this app inside Canva for a live scan and real apply.");
       return;
     }
-    if (!selected.some((item) => item.enabled)) return;
+    if (!selected.some((item) => item.enabled && item.status === "executable")) return;
+    if (connected && !approved) {
+      setNotice("Review the exact targets and tick the approval box before applying to Canva.");
+      return;
+    }
     setStatus("applying");
     setNotice(null);
     try {
       const nextResult = await applyPlanToCanva(selected);
       setResult(nextResult);
+      if (nextResult.failures.length) {
+        setStatus("error");
+        setNotice(nextResult.failures.join(" · "));
+        return;
+      }
       setStatus("success");
       await scan();
       setStatus("success");
@@ -188,9 +194,10 @@ export default function Home() {
   }
 
   function toggleOperation(id: string) {
+    setApproved(false);
     setPlan((current) => current ? {
       ...current,
-      operations: current.operations.map((item) => item.id === id ? { ...item, enabled: !item.enabled } : item),
+      operations: current.operations.map((item) => item.id === id && item.status === "executable" ? { ...item, enabled: !item.enabled } : item),
     } : current);
   }
 
@@ -320,7 +327,7 @@ export default function Home() {
               {result && (
                 <article className="message message--assistant result-message">
                   <div className="avatar">✓</div>
-                  <div><strong>Update complete</strong><p>{result.changedElements} edits across {result.changedPages.length} slides. {result.skipped.length ? `${result.skipped.length} asset/layout tasks remain in review.` : "The deck was rescanned."}</p></div>
+                  <div><strong>{result.failures.length ? "Update stopped" : "Update complete"}</strong><p>{result.changedElements} edits across {result.changedPages.length} slides. {result.failures.length ? result.failures.join(" · ") : result.skipped.length ? `${result.skipped.length} gated task(s) were not written.` : "The deck was rescanned."}</p></div>
                 </article>
               )}
               {notice && <div className="notice">{notice}</div>}
@@ -369,9 +376,10 @@ export default function Home() {
                         <span className={change.risk === "safe" ? "risk-safe" : "risk-review"}>{change.risk}</span>
                       </div>
                       <p>{change.detail}</p>
+                      {change.blockedReason && <p className="operation-gate">{change.blockedReason}</p>}
                       {plan && (
                         <label className="include-row">
-                          <input type="checkbox" checked={change.enabled} onChange={() => toggleOperation(change.id)} /> Include in update
+                          <input type="checkbox" checked={change.enabled} disabled={change.status !== "executable"} onChange={() => toggleOperation(change.id)} /> {change.status === "executable" ? "Include in update" : "Needs exact input"}
                         </label>
                       )}
                     </div>
@@ -401,10 +409,15 @@ export default function Home() {
 
             <div className="approval-box">
               <label className="toggle-row">
-                <span><strong>Auto-apply low-risk fixes</strong><small>Exact text and token corrections only; review items stay gated</small></span>
-                <input type="checkbox" checked={autoApply} onChange={(event) => setAutoApply(event.target.checked)} />
+                <span><strong>Approval required for every write</strong><small>Preflight must resolve every target before Canva can change</small></span>
+                <input type="checkbox" checked readOnly disabled />
               </label>
-              <button className="apply-button" onClick={() => void apply()} disabled={!plan || status === "applying" || status === "planning"}>
+              {connected && (
+                <label className="include-row approval-confirmation">
+                  <input type="checkbox" checked={approved} onChange={(event) => setApproved(event.target.checked)} /> I reviewed the exact slide and element targets
+                </label>
+              )}
+              <button className="apply-button" onClick={() => void apply()} disabled={!plan || !enabledOperations.length || (connected && !approved) || status === "applying" || status === "planning"}>
                 {status === "applying" ? "Applying and rechecking…" : connected ? `Apply ${changedSlides} slide updates` : previewApplied ? "Refresh simulated preview" : `Preview ${changedSlides} planned slide updates`}
               </button>
               <button className="secondary-button" onClick={exportPlan} disabled={!plan}>Export reviewed plan</button>

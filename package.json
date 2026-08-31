@@ -9,10 +9,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "npm run lint && npm run build",
+    "test": "npm run test:unit && npm run lint && npm run build",
+    "test:unit": "node --import tsx --test tests/*.test.ts",
     "lint": "eslint . --ignore-pattern .next --ignore-pattern canva-app/dist --ignore-pattern canva-app/node_modules",
     "canva:install": "npm --prefix canva-app ci",
-    "canva:sync": "cp lib/canva-engine.ts canva-app/src/lib/canva-engine.ts && cp lib/deck-types.ts canva-app/src/lib/deck-types.ts",
+    "canva:sync": "cp lib/canva-engine.ts canva-app/src/lib/canva-engine.ts && cp lib/deck-types.ts canva-app/src/lib/deck-types.ts && cp lib/deck-contract.ts canva-app/src/lib/deck-contract.ts && cp lib/plan-guard.ts canva-app/src/lib/plan-guard.ts",
     "canva:build": "npm run canva:sync && npm --prefix canva-app run build",
     "canva:verify": "npm run canva:sync && npm --prefix canva-app run typecheck && npm --prefix canva-app run build"
   },
@@ -38,6 +39,7 @@
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "4.2.1",
+    "tsx": "^4.23.13",
     "typescript": "5.9.3"
   },
   "type": "module",

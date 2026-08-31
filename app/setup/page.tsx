@@ -50,8 +50,8 @@ export default function SetupPage() {
       </section>
 
       <section className="capability-table">
-        <div><strong>Automatic</strong><span>Exact text/client replacements, verified images, headers, footers, route arrows, backgrounds and full-deck QA.</span></div>
-        <div><strong>Approval gate</strong><span>Speaker facts, logos, icons, focus grids, itinerary redesigns and canonical page duplication.</span></div>
+        <div><strong>Exact operations</strong><span>Text/client replacements, pixel moves and resizes, font fixes, verified media, native text/shapes, canonical page duplication and full-deck QA.</span></div>
+        <div><strong>Hard approval gate</strong><span>Every write is matched to a semantic slide and element, preflighted, shown for review and re-scanned. Slides 7, 8 and 10 stay locked.</span></div>
         <div><strong>Always editable</strong><span>Changes remain native Canva objects; no page is flattened into a screenshot.</span></div>
       </section>
     </main>

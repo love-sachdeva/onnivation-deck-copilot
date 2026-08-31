@@ -6,19 +6,19 @@ The two runtimes are intentionally separate. Canva's Apps SDK must be shipped as
 
 ## What is implemented
 
-- Reads every editable page through Canva's Design Editing API.
-- Audits standard backgrounds, headers, route labels/arrows, footers, duplicate separators and likely text overflow.
+- Reads every editable page through Canva's Design Editing API and resolves it to a semantic slide contract.
+- Audits the real 34-slide Nike source, standard rails, canonical dot/font tokens, repeated-card geometry, footer separators, text safety, and the unfinished one-company layout.
 - Converts instructions into a structured, reviewable change plan.
 - Uses Claude with structured output when `ANTHROPIC_API_KEY` is configured, with OpenAI as an optional secondary provider.
 - Falls back to a deterministic local planner when no AI key is available.
 - Shows a visible, explicitly labeled slide simulation when opened outside Canva.
-- Applies approved exact-text replacements, client-name replacements, official image/logo replacements, header rails, footer rails, route-arrow centering and background-token fixes.
-- Can duplicate a selected canonical source page as native editable elements for a new slide.
+- Applies guarded exact-text/client replacements, font-family fixes, pixel moves/resizes, approved image/logo replacements, native text/shape insertions, canonical rails/dots, route-arrow centering and background-token fixes.
+- Can duplicate a selected 1/2/3/4-company or other canonical source page as native editable elements for a new slide.
 - Re-scans the deck after every apply operation.
 - Keeps layouts, text, shapes and other objects editable in Canva.
 - Exports the reviewed instruction, audit and change plan as JSON.
 
-Research-heavy people, logo, priority-icon, focus-grid, itinerary and new-layout changes are deliberately marked `Review`. Exact copy/image replacements and canonical page duplication become executable once the plan contains verified source data and a source layout; ambiguous restructuring is not silently written.
+Every write is re-guarded against a fresh scan, preflighted for an exact affected-element range, approved in the Canva panel, applied, and re-scanned. Slides 7, 8 and 10 are locked references. Research-heavy people, logos, priorities, focus grids and itinerary work stay gated until the plan contains exact verified fields and assets; ambiguous restructuring is never silently written.
 
 ## Production endpoint
 
@@ -72,9 +72,9 @@ For compatibility, the deployment also recognizes `claude_api_key`, but `ANTHROP
 | Forest | `#205047` |
 | Cover navy | `#0B196B` |
 | Ink | `#0F2442` |
-| Gold | `#E0B44C` |
+| Gold | `#C9A227` |
 
-The current canonical layout registry covers the 33-slide Nike reference deck: cover, priorities, programme overview, Masterclass, VC Connects, Focus Sessions, itinerary/breakout matrices and FAQ.
+The current canonical registry covers all 34 live Nike slides: cover, priorities, programme overview, Masterclass, VC Connects, Focus Sessions, itinerary/breakout matrices and FAQ. See [the completed template contract](docs/nike-template-contract.md).
 
 ## Local commands
 
