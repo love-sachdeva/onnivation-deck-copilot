@@ -5,6 +5,8 @@ type CanvaIdentity = {
   brandId: string;
 };
 
+const productionCanvaPanelOrigin = "https://app-aahogpzapay.canva-apps.com";
+
 let verifier: ReturnType<typeof initUserTokenVerifier> | null = null;
 let verifierAppId: string | null = null;
 
@@ -34,9 +36,11 @@ export function corsHeaders(request: Request) {
   const configuredOrigin = process.env.CANVA_APP_ORIGIN?.trim();
   const requestOrigin = request.headers.get("origin");
   const headers = new Headers({ Vary: "Origin" });
+  const isAllowedOrigin =
+    requestOrigin === configuredOrigin || requestOrigin === productionCanvaPanelOrigin;
 
-  if (configuredOrigin && requestOrigin === configuredOrigin) {
-    headers.set("Access-Control-Allow-Origin", configuredOrigin);
+  if (requestOrigin && isAllowedOrigin) {
+    headers.set("Access-Control-Allow-Origin", requestOrigin);
     headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
     headers.set("Access-Control-Max-Age", "86400");
