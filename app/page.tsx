@@ -308,7 +308,7 @@ export default function Home() {
                 <div className="avatar">O</div>
                 <div>
                   <strong>{status === "planning" ? "Preparing the change plan…" : plan ? "Plan prepared" : "Example plan ready"}</strong>
-                  <p>{plan ? `${enabledOperations.length} actions · ${changedSlides} slides · ${plannerLabel(plan.source)}` : `All sections are covered by the design-system registry · ${plannerLabel(plannerStatus.planner)}`}</p>
+                  <p>{plan ? `${enabledOperations.length} actions · ${changedSlides} slides · ${plannerLabel(plan.source)}` : `All sections are covered by the design-system registry · ${plannerLabel(connected ? plannerStatus.planner : "local")}`}</p>
                 </div>
               </article>
               {previewApplied && !connected && (
