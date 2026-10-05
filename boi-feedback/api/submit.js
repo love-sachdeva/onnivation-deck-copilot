@@ -48,15 +48,8 @@ export default async function handler(req, res) {
 function toSheetRow(r) {
   const sessions = Array.isArray(r.sessions) ? r.sessions : [];
   const labelsFor = signal => sessions.filter(s => s.signal === signal).map(s => s.session_label).join(', ');
-  const details = sessions
-    .filter(s => s.signal === 'forward')
-    .map(s => {
-      const parts = [s.session_label];
-      if (s.use_case) parts.push(`Use case: ${s.use_case}`);
-      if (s.next_step) parts.push(`Next step: ${NEXT_STEP_LABELS[s.next_step] || s.next_step}`);
-      return parts.join(' — ');
-    })
-    .join('\n');
+  const forward = sessions.filter(s => s.signal === 'forward');
+  const perCompany = value => forward.map(s => `${s.session_label} — ${value(s) || '—'}`).join('\n');
   return {
     'Submitted at': r.submitted_at || r.received_at || '',
     'Name': r.participant_name || '',
@@ -64,7 +57,8 @@ function toSheetRow(r) {
     'Take forward': labelsFor('forward'),
     'Interesting': labelsFor('interesting'),
     'Not now': labelsFor('not-now'),
-    'Take forward details': details,
+    'Use case': perCompany(s => s.use_case),
+    'Next step': perCompany(s => NEXT_STEP_LABELS[s.next_step] || s.next_step),
     'Participant ID': r.participant_id || '',
     'Submission ID': r.submission_id || ''
   };
