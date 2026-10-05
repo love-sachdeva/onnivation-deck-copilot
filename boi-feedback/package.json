@@ -1,0 +1,8 @@
+{
+  "name": "boi-ai-immersion-feedback",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/blob": "latest"
+  }
+}
